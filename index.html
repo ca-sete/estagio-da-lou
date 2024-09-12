@@ -76,7 +76,7 @@
     </div>
 
     <div class="image-box">
-        <span class="colorful-title" id="frase-titulo"></span>
+        <span class="colorful-title" id="frase-titulo"></span><br>
         <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
@@ -176,7 +176,7 @@
         // Função para alternar as cores das letras do título "frase do dia"
         function alternarCoresTitulo() {
             const titulo = "frase do dia";
-            let colors = ["red", "green", "blue", "purple", "orange", "yellow"];
+            let colors = ["red", "green", "blue", "purple", "orange", "pink"];
             let coloredTitle = "";
             for (let i = 0; i < titulo.length; i++) {
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
