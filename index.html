@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Estágio</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            background-color: #FFFAE3;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        #widget {
+            background-color: #FFF;
+            border: 2px solid #FFD700;
+            padding: 20px;
+            margin: 0 auto;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px #999;
+        }
+        h2 {
+            color: #FF4500;
+            text-shadow: 1px 1px 2px #FFA500;
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="widget">
+        <h2>Status do Estágio</h2>
+        <p id="time-left"></p>
+        <p id="work-status"></p>
+    </div>
+
+    <script>
+        const totalHours = 244;
+        const workedHours = 24;
+        const hoursPerDay = 8;
+        const daysPerWeek = 5;
+
+        // Lista de feriados que caem em dias úteis
+        const feriados = [
+            "2024-09-07", // Independência (sábado)
+            "2024-10-12", // Nossa Senhora Aparecida (sábado)
+            "2024-10-24", // Aniversário de Goiânia (quinta-feira)
+            "2024-10-28", // Dia do Servidor Público (segunda-feira)
+            "2024-11-02", // Finados (sábado)
+            "2024-11-15", // Proclamação da República (sexta-feira)
+            "2024-12-25"  // Natal (quarta-feira)
+        ];
+
+        function isHolidayOrWeekend(date) {
+            const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
+            const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+            return dayOfWeek === 0 || dayOfWeek === 6 || feriados.includes(dateStr);
+        }
+
+        // Calculando o tempo restante do dia de trabalho
+        function updateTimeLeftToday() {
+            const now = new Date();
+            const startHour = 8;
+            const workEndHour = 17;
+
+            let timeLeftMessage;
+
+            if (isHolidayOrWeekend(now)) {
+                timeLeftMessage = "Não há expediente hoje.";
+            } else if (now.getHours() < startHour) {
+                timeLeftMessage = "O expediente de hoje ainda não começou.";
+            } else if (now.getHours() >= workEndHour) {
+                timeLeftMessage = "O expediente de hoje já acabou.";
+            } else {
+                const endOfDay = new Date();
+                endOfDay.setHours(workEndHour, 0, 0, 0);
+
+                let timeLeftMillis = endOfDay - now;
+                let hoursLeft = Math.floor((timeLeftMillis / (1000 * 60 * 60)) % 24);
+                let minutesLeft = Math.floor((timeLeftMillis / (1000 * 60)) % 60);
+
+                timeLeftMessage = `Faltam ${hoursLeft} horas e ${minutesLeft} minutos para acabar o expediente de hoje.`;
+            }
+
+            document.getElementById("time-left").innerText = timeLeftMessage;
+        }
+
+        // Calculando o tempo restante em horas úteis
+        function updateWorkStatus() {
+            const remainingHours = totalHours - workedHours;
+            const remainingDays = remainingHours / hoursPerDay;
+            const remainingWeeks = remainingDays / daysPerWeek;
+            const remainingMonths = remainingWeeks / 4.34524; // semanas em média no mês
+
+            let statusMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
+
+            // Corrigir a concordância dos plurais
+            if (remainingMonths >= 1) {
+                statusMessage += ` Isso significa ${Math.floor(remainingMonths)} ` + (Math.floor(remainingMonths) === 1 ? "mês" : "meses");
+            }
+
+            if (remainingWeeks >= 1) {
+                statusMessage += `, ${Math.floor(remainingWeeks)} ` + (Math.floor(remainingWeeks) === 1 ? "semana" : "semanas");
+            }
+
+            statusMessage += ` e ${Math.ceil(remainingDays)} ` + (Math.ceil(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
+
+            document.getElementById("work-status").innerText = statusMessage;
+        }
+
+        // Atualizar o widget ao carregar a página
+        updateTimeLeftToday();
+        updateWorkStatus();
+
+        // Atualizar o tempo restante para o fim do expediente a cada minuto
+        setInterval(updateTimeLeftToday, 60000);
+    </script>
+
+</body>
+</html>
