@@ -77,6 +77,7 @@
 
     <div class="image-box">
         <span class="colorful-title" id="frase-titulo"></span>
+        <br>
         <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
@@ -87,6 +88,64 @@
         const hoursPerDay = 8;
         const daysPerWeek = 5;
         const lastDay = "18 de October ☠️";
+
+        // Calculando o tempo restante do dia de trabalho
+        function updateTimeLeftToday() {
+            const now = new Date();
+            const startHour = 8;
+            const workEndHour = 17;
+
+            let timeLeftMessage;
+
+            if (now.getHours() < startHour) {
+                timeLeftMessage = "O expediente de hoje ainda não começou.";
+            } else if (now.getHours() >= workEndHour) {
+                timeLeftMessage = "O expediente de hoje já acabou.";
+            } else {
+                const endOfDay = new Date();
+                endOfDay.setHours(workEndHour, 0, 0, 0);
+
+                let timeLeftMillis = endOfDay - now;
+                let hoursLeft = Math.floor((timeLeftMillis / (1000 * 60 * 60)) % 24);
+                let minutesLeft = Math.floor((timeLeftMillis / (1000 * 60)) % 60);
+
+                timeLeftMessage = `Faltam ${hoursLeft} horas e ${minutesLeft} minutos para acabar o expediente de hoje.`;
+            }
+
+            document.getElementById("time-left").innerText = timeLeftMessage;
+        }
+
+        // Calculando o tempo restante em horas úteis
+        function updateWorkStatus() {
+            const remainingHours = totalHours - workedHours;
+            const remainingDays = remainingHours / hoursPerDay;
+            const remainingWeeks = remainingDays / daysPerWeek;
+            const remainingMonths = remainingWeeks / 4.34524; // semanas em média no mês
+
+            let statusMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
+
+            // Corrigir a concordância dos plurais
+            if (remainingMonths >= 1) {
+                statusMessage += ` Isso significa ${Math.floor(remainingMonths)} ` + (Math.floor(remainingMonths) === 1 ? "mês" : "meses");
+            }
+
+            if (remainingWeeks >= 1) {
+                statusMessage += `, ${Math.floor(remainingWeeks)} ` + (Math.floor(remainingWeeks) === 1 ? "semana" : "semanas");
+            }
+
+            statusMessage += ` e ${Math.ceil(remainingDays)} ` + (Math.ceil(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
+
+            document.getElementById("work-status").innerText = statusMessage;
+        }
+
+        // Exibindo a data do último dia de estágio
+function updateEndDate() {
+    const options = { day: 'numeric', month: 'long' };
+    const lastDayDate = new Date(2024, 9, 18); // Mês de outubro (9, porque é 0-indexado)
+    const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
+    document.getElementById("end-date").innerText = `Último dia de estágio: ${lastDayFormatted} ☠️`;
+}
+
 
         // Lista de frases do dia
         const frases = [
@@ -99,37 +158,7 @@
             "Acredite no processo. Tudo o que você faz hoje está construindo seu amanhã.",
             "Levante, trabalhe e repita. Isso é o que traz resultados.",
             "A ação é a chave para o sucesso!",
-            "Determinação hoje, realização amanhã!",
-            "Esforço contínuo, não força ou inteligência, é a chave para desbloquear o potencial.",
-            "O sucesso só é possível com trabalho duro e perseverança.",
-            "Você não precisa ser perfeito para alcançar o que deseja. Apenas consistente.",
-            "Você é o criador do seu próprio destino. Construa algo incrível!",
-            "Pequenas ações diárias fazem toda a diferença no longo prazo.",
-            "Não é sobre o quão rápido você vai, mas sobre o quão longe você pode ir.",
-            "Seja a mudança que você quer ver no mundo – e no seu trabalho!",
-            "Disciplina é a ponte entre metas e conquistas.",
-            "Você é mais forte do que imagina, mais capaz do que acredita.",
-            "Não olhe para trás, você está indo na direção certa.",
-            "Se fosse fácil, todo mundo faria.",
-            "Seu futuro é criado pelo que você faz hoje, não amanhã.",
-            "A verdadeira coragem é continuar quando todo mundo desistiria.",
-            "Você nunca falha até parar de tentar.",
-            "Grandes coisas levam tempo. Continue trabalhando.",
-            "O único lugar onde o sucesso vem antes do trabalho é no dicionário.",
-            "Amanhã será melhor porque você está se esforçando hoje.",
-            "Trabalhe até que seus ídolos se tornem seus rivais.",
-            "Falhas são apenas degraus para o sucesso.",
-            "A jornada de mil milhas começa com um único passo.",
-            "Não pare quando estiver cansado. Pare quando tiver terminado.",
-            "Não é sobre a perfeição, é sobre o progresso.",
-            "Faça de cada dia uma obra de arte.",
-            "Você está construindo um legado, um tijolo de cada vez.",
-            "Você tem o poder de criar mudanças – uma tarefa de cada vez.",
-            "Não espere por oportunidades. Crie-as!",
-            "Confiança não é sobre sempre estar certo, mas nunca desistir.",
-            "Persistência é o combustível para alcançar a excelência.",
-            "A cada novo dia, uma nova chance de ser melhor.",
-            "O sucesso está esperando por você. Apenas siga em frente!"
+            "Determinação hoje, realização amanhã!"
         ];
 
         // Lista de URLs das imagens
@@ -149,7 +178,7 @@
         // Função para alternar as cores das letras do título "frase do dia"
         function alternarCoresTitulo() {
             const titulo = "frase do dia";
-            let colors = ["red", "green", "blue", "purple", "orange", "yellow"];
+            let colors = ["red", "green", "blue", "purple", "orange", "pink"];
             let coloredTitle = "";
             for (let i = 0; i < titulo.length; i++) {
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
