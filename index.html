@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Status do Estágio</title>
+    <title>Status do Estágio e Frase do Dia</title>
     <style>
+        /* Estilo para o widget */
         body {
             font-family: 'Comic Sans MS', sans-serif;
             background-color: #FFFAE3;
@@ -32,6 +33,37 @@
             color: #333;
             margin-top: 10px;
         }
+
+        /* Estilo para o título da frase do dia */
+        .colorful-title {
+            display: inline-block;
+            font-size: 24px;
+            text-transform: lowercase;
+        }
+
+        /* Estilo para as imagens */
+        .image-box {
+            margin-top: 30px;
+            position: relative;
+        }
+        .image-box img {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            max-height: 400px;
+        }
+        .image-box p {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: yellow;
+            text-shadow: 2px 2px 4px black;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            width: 90%;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +72,13 @@
         <h2>Status do Estágio</h2>
         <p id="time-left"></p>
         <p id="work-status"></p>
+        <p id="end-date"></p>
+    </div>
+
+    <div class="image-box">
+        <span class="colorful-title" id="frase-titulo"></span>
+        <img id="frase-imagem" src="" alt="frase do dia imagem">
+        <p id="frase-texto"></p>
     </div>
 
     <script>
@@ -47,78 +86,94 @@
         const workedHours = 24;
         const hoursPerDay = 8;
         const daysPerWeek = 5;
+        const lastDay = "18 de October ☠️";
 
-        // Lista de feriados que caem em dias úteis
-        const feriados = [
-            "2024-09-07", // Independência (sábado)
-            "2024-10-12", // Nossa Senhora Aparecida (sábado)
-            "2024-10-24", // Aniversário de Goiânia (quinta-feira)
-            "2024-10-28", // Dia do Servidor Público (segunda-feira)
-            "2024-11-02", // Finados (sábado)
-            "2024-11-15", // Proclamação da República (sexta-feira)
-            "2024-12-25"  // Natal (quarta-feira)
+        // Lista de frases do dia
+        const frases = [
+            "Trabalhe duro em silêncio e deixe o sucesso fazer barulho!",
+            "Não há atalhos para o topo da montanha.",
+            "A persistência é o caminho do êxito.",
+            "Pequenos progressos diários levam a grandes resultados.",
+            "Cada passo, por menor que seja, é um passo em direção ao seu objetivo.",
+            "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+            "Acredite no processo. Tudo o que você faz hoje está construindo seu amanhã.",
+            "Levante, trabalhe e repita. Isso é o que traz resultados.",
+            "A ação é a chave para o sucesso!",
+            "Determinação hoje, realização amanhã!",
+            "Esforço contínuo, não força ou inteligência, é a chave para desbloquear o potencial.",
+            "O sucesso só é possível com trabalho duro e perseverança.",
+            "Você não precisa ser perfeito para alcançar o que deseja. Apenas consistente.",
+            "Você é o criador do seu próprio destino. Construa algo incrível!",
+            "Pequenas ações diárias fazem toda a diferença no longo prazo.",
+            "Não é sobre o quão rápido você vai, mas sobre o quão longe você pode ir.",
+            "Seja a mudança que você quer ver no mundo – e no seu trabalho!",
+            "Disciplina é a ponte entre metas e conquistas.",
+            "Você é mais forte do que imagina, mais capaz do que acredita.",
+            "Não olhe para trás, você está indo na direção certa.",
+            "Se fosse fácil, todo mundo faria.",
+            "Seu futuro é criado pelo que você faz hoje, não amanhã.",
+            "A verdadeira coragem é continuar quando todo mundo desistiria.",
+            "Você nunca falha até parar de tentar.",
+            "Grandes coisas levam tempo. Continue trabalhando.",
+            "O único lugar onde o sucesso vem antes do trabalho é no dicionário.",
+            "Amanhã será melhor porque você está se esforçando hoje.",
+            "Trabalhe até que seus ídolos se tornem seus rivais.",
+            "Falhas são apenas degraus para o sucesso.",
+            "A jornada de mil milhas começa com um único passo.",
+            "Não pare quando estiver cansado. Pare quando tiver terminado.",
+            "Não é sobre a perfeição, é sobre o progresso.",
+            "Faça de cada dia uma obra de arte.",
+            "Você está construindo um legado, um tijolo de cada vez.",
+            "Você tem o poder de criar mudanças – uma tarefa de cada vez.",
+            "Não espere por oportunidades. Crie-as!",
+            "Confiança não é sobre sempre estar certo, mas nunca desistir.",
+            "Persistência é o combustível para alcançar a excelência.",
+            "A cada novo dia, uma nova chance de ser melhor.",
+            "O sucesso está esperando por você. Apenas siga em frente!"
         ];
 
-        function isHolidayOrWeekend(date) {
-            const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
-            const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-            return dayOfWeek === 0 || dayOfWeek === 6 || feriados.includes(dateStr);
+        // Lista de URLs das imagens
+        const imagens = [
+            "https://www.syfy.com/sites/syfy/files/2021/06/shrekfest-shrek-super-slam.png",
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREsT_cVhOLHriUK8IiafGoPNSXFSy2MyVe5XKA4fBIjfyOK2-CxOa0h9JUs_XDr9xE-X8&usqp=CAU",
+            "https://content.imageresizer.com/images/memes/smart-shrek-meme-5.jpg",
+            "https://p19-pu-sign-useast8.tiktokcdn-us.com/tos-useast5-p-0068-tx/8ddd7fb0fc5a4640abe36b9ba61be215_1671160550~tplv-photomode-zoomcover:480:480.jpeg?lk3s=b59d6b55&x-expires=1726225200&x-signature=Hr9OkJ9qoqEkwx7gdO8P8NDmQtc%3D&shp=b59d6b55&shcp=-",
+            "https://i.pinimg.com/736x/12/82/1a/12821aef23d6a0615e08d056bf5018e1.jpg",
+            "https://community-lens.storage.googleapis.com/preview-media/thumbnail_poster/b4d7248b-a249-4d55-9b39-067ee820f884.jpg",
+            "https://www.theoakleafnews.com/wp-content/uploads/2021/04/shrek_and_donkey_face_swap___by_ogreboi21savage_dbddmc7-fullview.jpg",
+            "https://orcatalks.wordpress.com/wp-content/uploads/2020/10/photo_2020-10-25_22-05-00.jpg?w=1200&h=715&crop=1",
+            "https://uploads.dailydot.com/2018/09/shrek_what_are_you_doing_swamp.png?auto=compress&fm=png",
+            "https://image-pastemagazine-com-public-bucket.storage.googleapis.com/wp-content/uploads/2022/06/21060547/shrek_irony_main.jpg"
+        ];
+
+        // Função para alternar as cores das letras do título "frase do dia"
+        function alternarCoresTitulo() {
+            const titulo = "frase do dia";
+            let colors = ["red", "green", "blue", "purple", "orange", "yellow"];
+            let coloredTitle = "";
+            for (let i = 0; i < titulo.length; i++) {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                coloredTitle += `<span style="color: ${randomColor}">${titulo[i]}</span>`;
+            }
+            document.getElementById("frase-titulo").innerHTML = coloredTitle;
         }
 
-        // Calculando o tempo restante do dia de trabalho
-        function updateTimeLeftToday() {
-            const now = new Date();
-            const startHour = 8;
-            const workEndHour = 17;
+        // Função para exibir uma frase e imagem aleatória
+        function exibirFraseDoDia() {
+            const index = Math.floor(Math.random() * frases.length);
+            const frase = frases[index];
+            const imagem = imagens[index % imagens.length];
 
-            let timeLeftMessage;
-
-            if (isHolidayOrWeekend(now)) {
-                timeLeftMessage = "Não há expediente hoje.";
-            } else if (now.getHours() < startHour) {
-                timeLeftMessage = "O expediente de hoje ainda não começou.";
-            } else if (now.getHours() >= workEndHour) {
-                timeLeftMessage = "O expediente de hoje já acabou.";
-            } else {
-                const endOfDay = new Date();
-                endOfDay.setHours(workEndHour, 0, 0, 0);
-
-                let timeLeftMillis = endOfDay - now;
-                let hoursLeft = Math.floor((timeLeftMillis / (1000 * 60 * 60)) % 24);
-                let minutesLeft = Math.floor((timeLeftMillis / (1000 * 60)) % 60);
-
-                timeLeftMessage = `Faltam ${hoursLeft} horas e ${minutesLeft} minutos para acabar o expediente de hoje.`;
-            }
-
-            document.getElementById("time-left").innerText = timeLeftMessage;
-        }
-
-        // Calculando o tempo restante em horas úteis
-        function updateWorkStatus() {
-            const remainingHours = totalHours - workedHours;
-            const remainingDays = remainingHours / hoursPerDay;
-            const remainingWeeks = remainingDays / daysPerWeek;
-            const remainingMonths = remainingWeeks / 4.34524; // semanas em média no mês
-
-            let statusMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
-
-            // Corrigir a concordância dos plurais
-            if (remainingMonths >= 1) {
-                statusMessage += ` Isso significa ${Math.floor(remainingMonths)} ` + (Math.floor(remainingMonths) === 1 ? "mês" : "meses");
-            }
-
-            if (remainingWeeks >= 1) {
-                statusMessage += `, ${Math.floor(remainingWeeks)} ` + (Math.floor(remainingWeeks) === 1 ? "semana" : "semanas");
-            }
-
-            statusMessage += ` e ${Math.ceil(remainingDays)} ` + (Math.ceil(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
-
-            document.getElementById("work-status").innerText = statusMessage;
+            document.getElementById("frase-texto").innerText = frase;
+            document.getElementById("frase-imagem").src = imagem;
         }
 
         // Atualizar o widget ao carregar a página
         updateTimeLeftToday();
         updateWorkStatus();
+        updateEndDate();
+        alternarCoresTitulo();
+        exibirFraseDoDia();
 
         // Atualizar o tempo restante para o fim do expediente a cada minuto
         setInterval(updateTimeLeftToday, 60000);
