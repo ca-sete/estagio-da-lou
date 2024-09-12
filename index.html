@@ -76,7 +76,7 @@
     </div>
 
     <div class="image-box">
-        <span class="colorful-title" id="frase-titulo"></span><br>
+        <span class="colorful-title" id="frase-titulo"></span></br>
         <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
@@ -86,17 +86,41 @@
         const workedHours = 24;
         const hoursPerDay = 8;
         const daysPerWeek = 5;
-        const lastDay = "15 de October ☠️";  // Último dia agora é 15 de outubro
 
-        // Função para exibir a data final em português
+        // Função para calcular o último dia de trabalho
+        function calcularUltimoDia(diasRestantes) {
+            let dataAtual = new Date();
+            let diasUteis = 0;
+
+            while (diasRestantes > 0) {
+                dataAtual.setDate(dataAtual.getDate() + 1);
+                const dayOfWeek = dataAtual.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Se não for domingo ou sábado
+                    diasRestantes--;
+                    diasUteis++;
+                }
+            }
+
+            return dataAtual;
+        }
+
+        // Calculando as horas e dias restantes
+        const remainingHours = totalHours - workedHours;
+        const remainingDays = remainingHours / hoursPerDay;
+
+        // Calculando o último dia de estágio
+        const lastDayDate = calcularUltimoDia(remainingDays);
+
+        // Formatando a data final em português
+        const options = { day: 'numeric', month: 'long' };
+        const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
+
+        // Função para exibir a data final
         function updateEndDate() {
-            const options = { day: 'numeric', month: 'long' };
-            const lastDayDate = new Date(2024, 9, 15);  // 15 de outubro
-            const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
             document.getElementById("end-date").innerText = `Último dia de estágio: ${lastDayFormatted} ☠️`;
         }
 
-        // Calculando o tempo restante do dia de trabalho
+        // Função para calcular as horas restantes no dia de trabalho
         function updateTimeLeftToday() {
             const now = new Date();
             const startHour = 8;
@@ -122,25 +146,12 @@
             document.getElementById("time-left").innerText = timeLeftMessage;
         }
 
-        // Calculando o tempo restante em horas úteis
+        // Função para calcular o tempo restante em horas úteis
         function updateWorkStatus() {
-            const remainingHours = totalHours - workedHours;
-            const remainingDays = remainingHours / hoursPerDay;
             const remainingWeeks = remainingDays / daysPerWeek;
-            const remainingMonths = remainingWeeks / 4.34524; // semanas em média no mês
 
             let statusMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
-
-            // Corrigir a concordância dos plurais
-            if (remainingMonths >= 1) {
-                statusMessage += ` Isso significa ${Math.floor(remainingMonths)} ` + (Math.floor(remainingMonths) === 1 ? "mês" : "meses");
-            }
-
-            if (remainingWeeks >= 1) {
-                statusMessage += `, ${Math.floor(remainingWeeks)} ` + (Math.floor(remainingWeeks) === 1 ? "semana" : "semanas");
-            }
-
-            statusMessage += ` e ${Math.ceil(remainingDays)} ` + (Math.ceil(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
+            statusMessage += ` Isso significa ${Math.floor(remainingDays)} ` + (Math.floor(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
 
             document.getElementById("work-status").innerText = statusMessage;
         }
