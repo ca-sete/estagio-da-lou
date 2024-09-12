@@ -77,17 +77,24 @@
 
     <div class="image-box">
         <span class="colorful-title" id="frase-titulo"></span>
-        <br>
         <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
 
     <script>
-        const totalHours = 244;
+        const totalHours = 224;  // Atualizado para 224 horas
         const workedHours = 24;
         const hoursPerDay = 8;
         const daysPerWeek = 5;
-        const lastDay = "18 de October ☠️";
+        const lastDay = "15 de October ☠️";  // Último dia agora é 15 de outubro
+
+        // Função para exibir a data final em português
+        function updateEndDate() {
+            const options = { day: 'numeric', month: 'long' };
+            const lastDayDate = new Date(2024, 9, 15);  // 15 de outubro
+            const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
+            document.getElementById("end-date").innerText = `Último dia de estágio: ${lastDayFormatted} ☠️`;
+        }
 
         // Calculando o tempo restante do dia de trabalho
         function updateTimeLeftToday() {
@@ -138,15 +145,6 @@
             document.getElementById("work-status").innerText = statusMessage;
         }
 
-        // Exibindo a data do último dia de estágio
-function updateEndDate() {
-    const options = { day: 'numeric', month: 'long' };
-    const lastDayDate = new Date(2024, 9, 18); // Mês de outubro (9, porque é 0-indexado)
-    const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
-    document.getElementById("end-date").innerText = `Último dia de estágio: ${lastDayFormatted} ☠️`;
-}
-
-
         // Lista de frases do dia
         const frases = [
             "Trabalhe duro em silêncio e deixe o sucesso fazer barulho!",
@@ -178,7 +176,7 @@ function updateEndDate() {
         // Função para alternar as cores das letras do título "frase do dia"
         function alternarCoresTitulo() {
             const titulo = "frase do dia";
-            let colors = ["red", "green", "blue", "purple", "orange", "pink"];
+            let colors = ["red", "green", "blue", "purple", "orange", "yellow"];
             let coloredTitle = "";
             for (let i = 0; i < titulo.length; i++) {
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -189,9 +187,10 @@ function updateEndDate() {
 
         // Função para exibir uma frase e imagem aleatória
         function exibirFraseDoDia() {
-            const index = Math.floor(Math.random() * frases.length);
-            const frase = frases[index];
-            const imagem = imagens[index % imagens.length];
+            const fraseIndex = Math.floor(Math.random() * frases.length);
+            const imagemIndex = Math.floor(Math.random() * imagens.length);
+            const frase = frases[fraseIndex];
+            const imagem = imagens[imagemIndex];
 
             document.getElementById("frase-texto").innerText = frase;
             document.getElementById("frase-imagem").src = imagem;
