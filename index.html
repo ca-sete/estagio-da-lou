@@ -70,14 +70,15 @@
 
     <div id="widget">
         <h2>Status do Estágio</h2>
+        <p id="time-left-today"></p>
         <p id="time-left"></p>
         <p id="work-status"></p>
         <p id="end-date"></p>
     </div>
 
     <div class="image-box">
-        <span class="colorful-title" id="frase-titulo"></span>
-        <img id="frase-imagem" src="" alt="frase do dia imagem"></br>
+        <span class="colorful-title" id="frase-titulo"></span></br>
+        <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
 
@@ -139,11 +140,37 @@
             return remainingHours > 0 ? remainingHours : 0;
         }
 
-        // Função para exibir as horas restantes no dia de trabalho
+        // Função para calcular as horas restantes no expediente de hoje
+        function calculateRemainingHoursToday() {
+            const now = new Date();
+            if (!isWorkingDay(now)) return "Não há expediente hoje.";
+
+            const currentHour = now.getHours();
+            let remainingHoursToday = 0;
+
+            if (currentHour < startHour) {
+                remainingHoursToday = hoursPerDay;  // Antes do expediente
+            } else if (currentHour >= startHour && currentHour < lunchStart) {
+                remainingHoursToday = endHour - currentHour - 1;  // Antes do almoço
+            } else if (currentHour >= lunchEnd && currentHour < endHour) {
+                remainingHoursToday = endHour - currentHour;  // Após o almoço
+            } else if (currentHour >= endHour) {
+                return "O expediente de hoje já acabou.";  // Após o expediente
+            }
+
+            return `Faltam ${remainingHoursToday} horas para acabar o expediente de hoje.`;
+        }
+
+        // Função para exibir as horas restantes no expediente de hoje
         function updateTimeLeftToday() {
+            const timeLeftTodayMessage = calculateRemainingHoursToday();
+            document.getElementById("time-left-today").innerText = timeLeftTodayMessage;
+        }
+
+        // Função para exibir as horas restantes do estágio
+        function updateRemainingHours() {
             const remainingHours = calculateRemainingHours();
             const timeLeftMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
-
             document.getElementById("time-left").innerText = timeLeftMessage;
         }
 
@@ -233,12 +260,15 @@
 
         // Inicialização
         updateTimeLeftToday();
+        updateRemainingHours();
         updateEndDate();
         alternarCoresTitulo();
         exibirFraseDoDia();
 
         // Atualizar o tempo restante para o fim do expediente a cada minuto
         setInterval(updateTimeLeftToday, 60000);
+        setInterval(updateRemainingHours, 60000);
+
     </script>
 
 </body>
