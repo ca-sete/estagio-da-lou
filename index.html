@@ -76,87 +76,113 @@
     </div>
 
     <div class="image-box">
-        <span class="colorful-title" id="frase-titulo"></span></br>
-        <img id="frase-imagem" src="" alt="frase do dia imagem">
+        <span class="colorful-title" id="frase-titulo"></span>
+        <img id="frase-imagem" src="" alt="frase do dia imagem"></br>
         <p id="frase-texto"></p>
     </div>
 
     <script>
-        const totalHours = 224;  // Atualizado para 224 horas
-        const workedHours = 24;
-        const hoursPerDay = 8;
-        const daysPerWeek = 5;
+        const totalHours = 224;  // Total de horas do estágio
+        const startHour = 8;     // Hora de início do expediente
+        const endHour = 17;      // Hora de fim do expediente
+        const lunchStart = 12;   // Início do almoço
+        const lunchEnd = 13;     // Fim do almoço
+        const hoursPerDay = 8;   // Total de horas úteis por dia de trabalho
+        const daysPerWeek = 5;   // Quantidade de dias úteis por semana
+        const workedHours = 24;  // Horas já trabalhadas
 
-        // Função para calcular o último dia de trabalho
-        function calcularUltimoDia(diasRestantes) {
-            let dataAtual = new Date();
-            let diasUteis = 0;
-
-            while (diasRestantes > 0) {
-                dataAtual.setDate(dataAtual.getDate() + 1);
-                const dayOfWeek = dataAtual.getDay();
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Se não for domingo ou sábado
-                    diasRestantes--;
-                    diasUteis++;
-                }
-            }
-
-            return dataAtual;
+        // Função para verificar se hoje é um dia útil (de segunda a sexta-feira)
+        function isWorkingDay(date) {
+            const day = date.getDay();
+            return day >= 1 && day <= 5; // De segunda a sexta-feira
         }
 
-        // Calculando as horas e dias restantes
-        const remainingHours = totalHours - workedHours;
-        const remainingDays = remainingHours / hoursPerDay;
-
-        // Calculando o último dia de estágio
-        const lastDayDate = calcularUltimoDia(remainingDays);
-
-        // Formatando a data final em português
-        const options = { day: 'numeric', month: 'long' };
-        const lastDayFormatted = lastDayDate.toLocaleDateString('pt-BR', options);
-
-        // Função para exibir a data final
-        function updateEndDate() {
-            document.getElementById("end-date").innerText = `Último dia de estágio: ${lastDayFormatted} ☠️`;
-        }
-
-        // Função para calcular as horas restantes no dia de trabalho
-        function updateTimeLeftToday() {
+        // Função para calcular as horas trabalhadas até o momento no dia atual
+        function calculateHoursWorkedToday() {
             const now = new Date();
-            const startHour = 8;
-            const workEndHour = 17;
+            if (!isWorkingDay(now)) return 0;  // Se for sábado ou domingo, retorna 0
 
-            let timeLeftMessage;
+            const currentHour = now.getHours();
+            let hoursWorked = 0;
 
-            if (now.getHours() < startHour) {
-                timeLeftMessage = "O expediente de hoje ainda não começou.";
-            } else if (now.getHours() >= workEndHour) {
-                timeLeftMessage = "O expediente de hoje já acabou.";
-            } else {
-                const endOfDay = new Date();
-                endOfDay.setHours(workEndHour, 0, 0, 0);
-
-                let timeLeftMillis = endOfDay - now;
-                let hoursLeft = Math.floor((timeLeftMillis / (1000 * 60 * 60)) % 24);
-                let minutesLeft = Math.floor((timeLeftMillis / (1000 * 60)) % 60);
-
-                timeLeftMessage = `Faltam ${hoursLeft} horas e ${minutesLeft} minutos para acabar o expediente de hoje.`;
+            if (currentHour >= startHour && currentHour < lunchStart) {
+                // Se for antes do almoço, calcula as horas da manhã
+                hoursWorked = currentHour - startHour;
+            } else if (currentHour >= lunchEnd && currentHour < endHour) {
+                // Se for depois do almoço, calcula horas trabalhadas de manhã e tarde
+                hoursWorked = (lunchStart - startHour) + (currentHour - lunchEnd);
+            } else if (currentHour >= endHour) {
+                // Se já passou do fim do expediente
+                hoursWorked = hoursPerDay;
             }
+
+            return hoursWorked;
+        }
+
+        // Função para calcular as horas restantes do estágio
+        function calculateRemainingHours() {
+            const now = new Date();
+            const totalDaysWorked = Math.floor((now - new Date(2024, 8, 10)) / (1000 * 60 * 60 * 24));
+            let workedDays = 0;
+            let remainingHours = totalHours - workedHours;
+
+            // Verifica quantos dias úteis foram trabalhados até agora
+            for (let i = 0; i <= totalDaysWorked; i++) {
+                const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+                if (isWorkingDay(date)) workedDays++;
+            }
+
+            // Calcula as horas já trabalhadas considerando os dias úteis e as horas de hoje
+            const totalWorkedHours = (workedDays * hoursPerDay) + calculateHoursWorkedToday();
+            remainingHours -= totalWorkedHours;
+
+            return remainingHours > 0 ? remainingHours : 0;
+        }
+
+        // Função para exibir as horas restantes no dia de trabalho
+        function updateTimeLeftToday() {
+            const remainingHours = calculateRemainingHours();
+            const timeLeftMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
 
             document.getElementById("time-left").innerText = timeLeftMessage;
         }
 
-        // Função para calcular o tempo restante em horas úteis
-        function updateWorkStatus() {
-            const remainingWeeks = remainingDays / daysPerWeek;
-
-            let statusMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
-            statusMessage += ` Isso significa ${Math.floor(remainingDays)} ` + (Math.floor(remainingDays) === 1 ? "dia" : "dias") + ` de trabalho.`;
-
-            document.getElementById("work-status").innerText = statusMessage;
+        // Função para calcular o último dia de trabalho, baseado nas horas restantes
+        function calculateLastDay(remainingHours) {
+            let date = new Date();
+            while (remainingHours > 0) {
+                date.setDate(date.getDate() + 1);
+                if (isWorkingDay(date)) remainingHours -= hoursPerDay;
+            }
+            return date;
         }
 
-        // Lista de frases do dia
+        // Função para formatar a data em português
+        function formatDate(date) {
+            const options = { day: 'numeric', month: 'long' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        // Função para atualizar a data final do estágio
+        function updateEndDate() {
+            const remainingHours = calculateRemainingHours();
+            const lastDay = calculateLastDay(remainingHours);
+            document.getElementById("end-date").innerText = `Último dia de estágio: ${formatDate(lastDay)} ☠️`;
+        }
+
+        // Função para alternar as cores das letras do título "frase do dia"
+        function alternarCoresTitulo() {
+            const titulo = "frase do dia";
+            let colors = ["red", "green", "blue", "purple", "orange", "pink"];
+            let coloredTitle = "";
+            for (let i = 0; i < titulo.length; i++) {
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                coloredTitle += `<span style="color: ${randomColor}">${titulo[i]}</span>`;
+            }
+            document.getElementById("frase-titulo").innerHTML = coloredTitle;
+        }
+
+        // Lista de frases do dia (expansão)
         const frases = [
             "Trabalhe duro em silêncio e deixe o sucesso fazer barulho!",
             "Não há atalhos para o topo da montanha.",
@@ -167,7 +193,17 @@
             "Acredite no processo. Tudo o que você faz hoje está construindo seu amanhã.",
             "Levante, trabalhe e repita. Isso é o que traz resultados.",
             "A ação é a chave para o sucesso!",
-            "Determinação hoje, realização amanhã!"
+            "Determinação hoje, realização amanhã!",
+            "Nunca desista, pois o que você planta hoje colherá amanhã.",
+            "Sucesso é resultado de preparação, trabalho duro e aprender com os fracassos.",
+            "Transforme desafios em oportunidades!",
+            "Cada dia é uma nova chance de ser melhor que ontem.",
+            "Vá firme na direção dos seus sonhos!",
+            "O trabalho duro supera o talento quando o talento não trabalha duro.",
+            "A grandeza não vem do que você faz ocasionalmente, mas do que você faz consistentemente.",
+            "Sua única limitação é você mesmo. Vá além!",
+            "Suas ações de hoje determinam o seu futuro de amanhã.",
+            "A disciplina é o melhor caminho para o sucesso duradouro."
         ];
 
         // Lista de URLs das imagens
@@ -184,18 +220,6 @@
             "https://image-pastemagazine-com-public-bucket.storage.googleapis.com/wp-content/uploads/2022/06/21060547/shrek_irony_main.jpg"
         ];
 
-        // Função para alternar as cores das letras do título "frase do dia"
-        function alternarCoresTitulo() {
-            const titulo = "frase do dia";
-            let colors = ["red", "green", "blue", "purple", "orange", "pink"];
-            let coloredTitle = "";
-            for (let i = 0; i < titulo.length; i++) {
-                const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                coloredTitle += `<span style="color: ${randomColor}">${titulo[i]}</span>`;
-            }
-            document.getElementById("frase-titulo").innerHTML = coloredTitle;
-        }
-
         // Função para exibir uma frase e imagem aleatória
         function exibirFraseDoDia() {
             const fraseIndex = Math.floor(Math.random() * frases.length);
@@ -207,9 +231,8 @@
             document.getElementById("frase-imagem").src = imagem;
         }
 
-        // Atualizar o widget ao carregar a página
+        // Inicialização
         updateTimeLeftToday();
-        updateWorkStatus();
         updateEndDate();
         alternarCoresTitulo();
         exibirFraseDoDia();
