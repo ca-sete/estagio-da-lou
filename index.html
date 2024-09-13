@@ -72,7 +72,6 @@
         <h2>Status do Estágio</h2>
         <p id="time-left-today"></p>
         <p id="time-left"></p>
-        <p id="work-status"></p>
         <p id="end-date"></p>
     </div>
 
@@ -83,14 +82,14 @@
     </div>
 
     <script>
-        const totalHours = 224;  // Total de horas do estágio
+        const totalHours = 200;  // Total de horas do estágio
         const startHour = 8;     // Hora de início do expediente
         const endHour = 17;      // Hora de fim do expediente
         const lunchStart = 12;   // Início do almoço
         const lunchEnd = 13;     // Fim do almoço
         const hoursPerDay = 8;   // Total de horas úteis por dia de trabalho
-        const daysPerWeek = 5;   // Quantidade de dias úteis por semana
-        const workedHours = 24;  // Horas já trabalhadas
+
+        const startDate = new Date(); // Data de início do estágio (hoje)
 
         // Função para verificar se hoje é um dia útil (de segunda a sexta-feira)
         function isWorkingDay(date) {
@@ -104,39 +103,66 @@
             if (!isWorkingDay(now)) return 0;  // Se for sábado ou domingo, retorna 0
 
             const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
             let hoursWorked = 0;
 
-            if (currentHour >= startHour && currentHour < lunchStart) {
-                // Se for antes do almoço, calcula as horas da manhã
-                hoursWorked = currentHour - startHour;
+            if (currentHour < startHour) {
+                // Antes do expediente começar
+                hoursWorked = 0;
+            } else if (currentHour >= startHour && currentHour < lunchStart) {
+                // Durante o turno da manhã
+                hoursWorked = (currentHour - startHour) + (currentMinutes / 60);
+            } else if (currentHour >= lunchStart && currentHour < lunchEnd) {
+                // Hora do almoço
+                hoursWorked = lunchStart - startHour; // 4 horas trabalhadas na manhã
             } else if (currentHour >= lunchEnd && currentHour < endHour) {
-                // Se for depois do almoço, calcula horas trabalhadas de manhã e tarde
-                hoursWorked = (lunchStart - startHour) + (currentHour - lunchEnd);
+                // Durante o turno da tarde
+                hoursWorked = (lunchStart - startHour) + (currentHour - lunchEnd) + (currentMinutes / 60);
             } else if (currentHour >= endHour) {
-                // Se já passou do fim do expediente
+                // Após o expediente
                 hoursWorked = hoursPerDay;
             }
 
             return hoursWorked;
         }
 
+        // Função para calcular o número de dias úteis entre duas datas
+        function getWorkingDays(startDate, endDate) {
+            let count = 0;
+            let currentDate = new Date(startDate);
+            currentDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+
+            while (currentDate < endDate) {
+                if (isWorkingDay(currentDate)) {
+                    count++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return count;
+        }
+
+        // Função para calcular o total de horas trabalhadas até agora
+        function calculateTotalHoursWorked() {
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+
+            const fullWorkingDays = getWorkingDays(startDate, yesterday);
+            const hoursFromFullDays = fullWorkingDays * hoursPerDay;
+
+            const hoursToday = calculateHoursWorkedToday();
+
+            const totalHoursWorked = hoursFromFullDays + hoursToday;
+
+            return totalHoursWorked;
+        }
+
         // Função para calcular as horas restantes do estágio
         function calculateRemainingHours() {
-            const now = new Date();
-            const totalDaysWorked = Math.floor((now - new Date(2024, 8, 10)) / (1000 * 60 * 60 * 24));
-            let workedDays = 0;
-            let remainingHours = totalHours - workedHours;
-
-            // Verifica quantos dias úteis foram trabalhados até agora
-            for (let i = 0; i <= totalDaysWorked; i++) {
-                const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-                if (isWorkingDay(date)) workedDays++;
-            }
-
-            // Calcula as horas já trabalhadas considerando os dias úteis e as horas de hoje
-            const totalWorkedHours = (workedDays * hoursPerDay) + calculateHoursWorkedToday();
-            remainingHours -= totalWorkedHours;
-
+            const totalHoursWorked = calculateTotalHoursWorked();
+            const remainingHours = totalHours - totalHoursWorked;
             return remainingHours > 0 ? remainingHours : 0;
         }
 
@@ -146,19 +172,28 @@
             if (!isWorkingDay(now)) return "Não há expediente hoje.";
 
             const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
             let remainingHoursToday = 0;
 
             if (currentHour < startHour) {
-                remainingHoursToday = hoursPerDay;  // Antes do expediente
+                // Antes do expediente começar
+                remainingHoursToday = hoursPerDay;
             } else if (currentHour >= startHour && currentHour < lunchStart) {
-                remainingHoursToday = endHour - currentHour - 1;  // Antes do almoço
+                // Durante o turno da manhã
+                const hoursUntilLunch = (lunchStart - currentHour) - (currentMinutes / 60);
+                remainingHoursToday = hoursUntilLunch + (endHour - lunchEnd);
+            } else if (currentHour >= lunchStart && currentHour < lunchEnd) {
+                // Hora do almoço
+                remainingHoursToday = endHour - lunchEnd;
             } else if (currentHour >= lunchEnd && currentHour < endHour) {
-                remainingHoursToday = endHour - currentHour;  // Após o almoço
+                // Durante o turno da tarde
+                remainingHoursToday = (endHour - currentHour) - (currentMinutes / 60);
             } else if (currentHour >= endHour) {
-                return "O expediente de hoje já acabou.";  // Após o expediente
+                // Após o expediente
+                return "O expediente de hoje já acabou.";
             }
 
-            return `Faltam ${remainingHoursToday} horas para acabar o expediente de hoje.`;
+            return `Faltam ${remainingHoursToday.toFixed(2)} horas para acabar o expediente de hoje.`;
         }
 
         // Função para exibir as horas restantes no expediente de hoje
@@ -170,16 +205,27 @@
         // Função para exibir as horas restantes do estágio
         function updateRemainingHours() {
             const remainingHours = calculateRemainingHours();
-            const timeLeftMessage = `Faltam ${remainingHours} horas úteis para o fim do estágio.`;
+            const timeLeftMessage = `Faltam ${remainingHours.toFixed(2)} horas totais.`;
             document.getElementById("time-left").innerText = timeLeftMessage;
         }
 
-        // Função para calcular o último dia de trabalho, baseado nas horas restantes
-        function calculateLastDay(remainingHours) {
-            let date = new Date();
-            while (remainingHours > 0) {
+        // Função para calcular o último dia de estágio
+        function calculateEndDate() {
+            const remainingHours = calculateRemainingHours();
+            let workingDaysNeeded = Math.ceil(remainingHours / hoursPerDay);
+            const now = new Date();
+            const endDate = getEndDate(now, workingDaysNeeded);
+            document.getElementById("end-date").innerText = `Seu estágio acaba no dia ${formatDate(endDate)}.`;
+        }
+
+        // Função para obter a data de término
+        function getEndDate(startDate, workingDaysNeeded) {
+            let date = new Date(startDate);
+            while (workingDaysNeeded > 0) {
                 date.setDate(date.getDate() + 1);
-                if (isWorkingDay(date)) remainingHours -= hoursPerDay;
+                if (isWorkingDay(date)) {
+                    workingDaysNeeded--;
+                }
             }
             return date;
         }
@@ -188,13 +234,6 @@
         function formatDate(date) {
             const options = { day: 'numeric', month: 'long' };
             return date.toLocaleDateString('pt-BR', options);
-        }
-
-        // Função para atualizar a data final do estágio
-        function updateEndDate() {
-            const remainingHours = calculateRemainingHours();
-            const lastDay = calculateLastDay(remainingHours);
-            document.getElementById("end-date").innerText = `Último dia de estágio: ${formatDate(lastDay)} ☠️`;
         }
 
         // Função para alternar as cores das letras do título "frase do dia"
@@ -209,7 +248,7 @@
             document.getElementById("frase-titulo").innerHTML = coloredTitle;
         }
 
-        // Lista de frases do dia (expansão)
+        // Lista de frases do dia
         const frases = [
             "Trabalhe duro em silêncio e deixe o sucesso fazer barulho!",
             "Não há atalhos para o topo da montanha.",
@@ -261,7 +300,7 @@
         // Inicialização
         updateTimeLeftToday();
         updateRemainingHours();
-        updateEndDate();
+        calculateEndDate();
         alternarCoresTitulo();
         exibirFraseDoDia();
 
