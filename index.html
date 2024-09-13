@@ -57,7 +57,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: pink; /* Altera a cor de yellow para pink */
+            color: yellow; /* Mantém a cor yellow conforme solicitado */
             text-shadow: 2px 2px 4px black;
             font-weight: bold;
             font-size: 20px;
@@ -228,18 +228,16 @@
         // Função para obter a data de término
         function getEndDate(startDate, workingDaysNeeded) {
             let date = new Date(startDate);
-            if (!isWorkingDay(date)) {
-                // Se hoje não é dia útil, começa a contar a partir do próximo dia útil
-                do {
-                    date.setDate(date.getDate() + 1);
-                } while (!isWorkingDay(date));
-            }
+            date.setHours(0, 0, 0, 0);
 
             while (workingDaysNeeded > 0) {
-                date.setDate(date.getDate() + 1);
                 if (isWorkingDay(date)) {
                     workingDaysNeeded--;
+                    if (workingDaysNeeded === 0) {
+                        break;
+                    }
                 }
+                date.setDate(date.getDate() + 1);
             }
             return date;
         }
