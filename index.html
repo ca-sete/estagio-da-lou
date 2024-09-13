@@ -36,7 +36,7 @@
 
         /* Estilo para o título da frase do dia */
         .colorful-title {
-            display: inline-block;
+            display: block; /* Altera para block para que fique em linha separada */
             font-size: 24px;
             text-transform: lowercase;
         }
@@ -57,7 +57,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: yellow;
+            color: pink; /* Altera a cor de yellow para pink */
             text-shadow: 2px 2px 4px black;
             font-weight: bold;
             font-size: 20px;
@@ -76,7 +76,7 @@
     </div>
 
     <div class="image-box">
-        <span class="colorful-title" id="frase-titulo"></span></br>
+        <span class="colorful-title" id="frase-titulo"></span>
         <img id="frase-imagem" src="" alt="frase do dia imagem">
         <p id="frase-texto"></p>
     </div>
@@ -91,13 +91,13 @@
 
         const startDate = new Date(); // Data de início do estágio (hoje)
 
-        // Função para verificar se hoje é um dia útil (de segunda a sexta-feira)
+        // Função para verificar se é um dia útil (de segunda a sexta-feira)
         function isWorkingDay(date) {
             const day = date.getDay();
             return day >= 1 && day <= 5; // De segunda a sexta-feira
         }
 
-        // Função para calcular as horas trabalhadas até o momento no dia atual
+        // Função para calcular as horas trabalhadas hoje
         function calculateHoursWorkedToday() {
             const now = new Date();
             if (!isWorkingDay(now)) return 0;  // Se for sábado ou domingo, retorna 0
@@ -166,34 +166,38 @@
             return remainingHours > 0 ? remainingHours : 0;
         }
 
-        // Função para calcular as horas restantes no expediente de hoje
+        // Função para calcular as horas e minutos restantes no expediente de hoje
         function calculateRemainingHoursToday() {
             const now = new Date();
             if (!isWorkingDay(now)) return "Não há expediente hoje.";
 
             const currentHour = now.getHours();
             const currentMinutes = now.getMinutes();
-            let remainingHoursToday = 0;
+            let remainingMinutesToday = 0;
 
             if (currentHour < startHour) {
                 // Antes do expediente começar
-                remainingHoursToday = hoursPerDay;
+                remainingMinutesToday = hoursPerDay * 60;
             } else if (currentHour >= startHour && currentHour < lunchStart) {
                 // Durante o turno da manhã
-                const hoursUntilLunch = (lunchStart - currentHour) - (currentMinutes / 60);
-                remainingHoursToday = hoursUntilLunch + (endHour - lunchEnd);
+                const minutesUntilLunch = ((lunchStart * 60) - (currentHour * 60 + currentMinutes));
+                remainingMinutesToday = minutesUntilLunch + ((endHour - lunchEnd) * 60);
             } else if (currentHour >= lunchStart && currentHour < lunchEnd) {
                 // Hora do almoço
-                remainingHoursToday = endHour - lunchEnd;
+                remainingMinutesToday = (endHour - lunchEnd) * 60;
             } else if (currentHour >= lunchEnd && currentHour < endHour) {
                 // Durante o turno da tarde
-                remainingHoursToday = (endHour - currentHour) - (currentMinutes / 60);
+                const minutesUntilEnd = ((endHour * 60) - (currentHour * 60 + currentMinutes));
+                remainingMinutesToday = minutesUntilEnd;
             } else if (currentHour >= endHour) {
                 // Após o expediente
                 return "O expediente de hoje já acabou.";
             }
 
-            return `Faltam ${remainingHoursToday.toFixed(2)} horas para acabar o expediente de hoje.`;
+            const hours = Math.floor(remainingMinutesToday / 60);
+            const minutes = remainingMinutesToday % 60;
+
+            return `Faltam ${hours} horas e ${minutes} minutos para acabar o expediente de hoje.`;
         }
 
         // Função para exibir as horas restantes no expediente de hoje
@@ -204,15 +208,18 @@
 
         // Função para exibir as horas restantes do estágio
         function updateRemainingHours() {
-            const remainingHours = calculateRemainingHours();
-            const timeLeftMessage = `Faltam ${remainingHours.toFixed(2)} horas totais.`;
+            const remainingHours = Math.ceil(calculateRemainingHours());
+            const timeLeftMessage = `Faltam ${remainingHours} horas totais.`;
             document.getElementById("time-left").innerText = timeLeftMessage;
         }
 
         // Função para calcular o último dia de estágio
         function calculateEndDate() {
-            const remainingHours = calculateRemainingHours();
-            let workingDaysNeeded = Math.ceil(remainingHours / hoursPerDay);
+            let remainingHours = calculateRemainingHours();
+            let workingDaysNeeded = Math.floor(remainingHours / hoursPerDay);
+            if (remainingHours % hoursPerDay !== 0) {
+                workingDaysNeeded += 1; // Adiciona um dia se houver horas restantes
+            }
             const now = new Date();
             const endDate = getEndDate(now, workingDaysNeeded);
             document.getElementById("end-date").innerText = `Seu estágio acaba no dia ${formatDate(endDate)}.`;
@@ -221,6 +228,13 @@
         // Função para obter a data de término
         function getEndDate(startDate, workingDaysNeeded) {
             let date = new Date(startDate);
+            if (!isWorkingDay(date)) {
+                // Se hoje não é dia útil, começa a contar a partir do próximo dia útil
+                do {
+                    date.setDate(date.getDate() + 1);
+                } while (!isWorkingDay(date));
+            }
+
             while (workingDaysNeeded > 0) {
                 date.setDate(date.getDate() + 1);
                 if (isWorkingDay(date)) {
